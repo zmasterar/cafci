@@ -1,24 +1,36 @@
 require 'dotenv/load'
 require 'httparty'
-
-today=Date.today
-yesterday=today.prev_day
+require 'date'
+message_endpoint="https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_KEY']}/sendMessage?chat_id=#{ENV['CHAT_ID']}&parse_mode=markdown&text="
 fondos = [
   {nombre: "Consultatio Retorno Absoluto - Clase A", fondo: 662, clase: 1367},
   {nombre: "Cohen Renta Fija Dolares - Clase A", fondo: 803, clase: 2088}
 ]
-print "Fecha desde (Formato YYYY-MM-DD. Si es ayer apretar Enter): "
-start = gets.chomp
-start = yesterday.strftime("%Y-%m-%d") if start == ""
 
-print "Fecha hasta (Formato YYYY-MM-DD. Si es hoy apretar Enter): "
-finish = gets.chomp
-finish = today.strftime("%Y-%m-%d") if finish == ""
-
-message_endpoint="https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_KEY']}/sendMessage?chat_id=#{ENV['CHAT_ID']}&parse_mode=markdown&text="
+if ARGV.count==2
+  start=ARGV[0]
+  finish=ARGV[1]
+elsif ARGV.count==0
+  if Time.now.wday == 6 or Time.now.wday == 0 #Sábado o domingo
+    puts "es fin de semana"
+    exit(0)
+  elsif Time.now.wday == 1 #Lunes
+    start=Date.today.prev_day(3).strftime("%Y-%m-%d")
+  else #Martes a viernes
+    start=Date.today.prev_day .strftime("%Y-%m-%d")
+  end
+  finish=Date.today.strftime("%Y-%m-%d")
+else
+  puts "Wrong number of arguments (must be 0 or 2)"
+  exit(1)
+end
 
 while true do
   time = Time.now
+  if time.hour >= 23
+    puts "Ya son las 23 y no hubo actualización, gracias vuelvas prontos"
+    exit(1)
+  end
   response = HTTParty.get("https://api.cafci.org.ar/fondo/662/clase/1367/rendimiento/#{start}/#{finish}").body
   break if response != '{"error":"inexistence"}'
   puts "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin cambios"
