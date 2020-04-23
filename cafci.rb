@@ -33,7 +33,7 @@ while true do
   end
   response = HTTParty.get("https://api.cafci.org.ar/fondo/662/clase/1367/rendimiento/#{start}/#{finish}").body
   break if response != '{"error":"inexistence"}'
-  puts "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin cambios"
+  puts "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin datos"
   sleep 10
 end
 
