@@ -6,13 +6,13 @@ fondos = [
   {nombre: "Consultatio Retorno Absoluto - Clase A", fondo: 662, clase: 1367},
   {nombre: "Cohen Renta Fija Dolares - Clase A", fondo: 803, clase: 2088}
 ]
-
+File.write("log.txt", "\n#{Time.now.strftime("%d/%m/%Y - %H:%M:%S")} - EMPIEZA EJECUCIÓN\n", mode: "a")
 if ARGV.count==2
   start=ARGV[0]
   finish=ARGV[1]
 elsif ARGV.count==0
   if Time.now.wday == 6 or Time.now.wday == 0 #Sábado o domingo
-    puts "es fin de semana"
+    File.write("log.txt", "es fin de semana\n", mode: "a")
     exit(0)
   elsif Time.now.wday == 1 #Lunes
     start=Date.today.prev_day(3).strftime("%Y-%m-%d")
@@ -21,19 +21,19 @@ elsif ARGV.count==0
   end
   finish=Date.today.strftime("%Y-%m-%d")
 else
-  puts "Wrong number of arguments (must be 0 or 2)"
+  File.write("log.txt", "Wrong number of arguments (must be 0 or 2)\n", mode: "a")
   exit(1)
 end
 
 while true do
   time = Time.now
   if time.hour >= 23
-    puts "Ya son las 23 y no hubo actualización, gracias vuelvas prontos"
+    File.write("log.txt", "Ya son las 23 y no hubo actualización, gracias vuelvas prontos\n", mode: "a")
     exit(1)
   end
   response = HTTParty.get("https://api.cafci.org.ar/fondo/662/clase/1367/rendimiento/#{start}/#{finish}").body
   break if response != '{"error":"inexistence"}'
-  puts "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin datos"
+  File.write("log.txt", "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin datos\n", mode: "a")
   sleep 10
 end
 
@@ -44,7 +44,7 @@ end
 
 fondos.each do |fondo|
   datos_fondo = JSON.parse(HTTParty.get("https://api.cafci.org.ar/fondo/#{fondo[:fondo]}/clase/#{fondo[:clase]}/rendimiento/#{start}/#{finish}").body)
-  puts "#{fondo[:nombre]} | Valor #{start}: #{datos_fondo["data"]["desde"]["valor"].to_s} | Valor #{finish}: #{datos_fondo["data"]["hasta"]["valor"].to_s} | Rendimiento: #{datos_fondo["data"]["rendimiento"].to_s}"
+  File.write("log.txt", "#{fondo[:nombre]} | Valor #{start}: #{datos_fondo["data"]["desde"]["valor"].to_s} | Valor #{finish}: #{datos_fondo["data"]["hasta"]["valor"].to_s} | Rendimiento: #{datos_fondo["data"]["rendimiento"].to_s}\n", mode: "a")
 
   HTTParty.get(message_endpoint+<<-HEREDOC
   *#{fondo[:nombre]}*%0A
