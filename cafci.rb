@@ -25,25 +25,21 @@ else
   exit(1)
 end
 
-while true do
-  time = Time.now
-  if time.hour >= 23
-    File.write("log.txt", "Ya son las 23 y no hubo actualización, gracias vuelvas prontos\n", mode: "a")
-    exit(1)
-  end
-  response = HTTParty.get("https://api.cafci.org.ar/fondo/662/clase/1367/rendimiento/#{start}/#{finish}").body
-  break if response != '{"error":"inexistence"}'
-  File.write("log.txt", "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin datos\n", mode: "a")
-  sleep 10
-end
-
-#HTTParty.get(message_endpoint+"Actualizaron los FCI")
-#HTTParty.post(ENV["WEBHOOK_URL"],
-#              content_type: "application/json",
-#              body: {content: "La CAFCI ya tiene datos actualizados para hoy"})
-
 fondos.each do |fondo|
-  datos_fondo = JSON.parse(HTTParty.get("https://api.cafci.org.ar/fondo/#{fondo[:fondo]}/clase/#{fondo[:clase]}/rendimiento/#{start}/#{finish}").body)
+  query_url="https://api.cafci.org.ar/fondo/#{fondo[:fondo]}/clase/#{fondo[:clase]}/rendimiento/#{start}/#{finish}"
+  while true do
+    time = Time.now
+    if time.hour >= 23
+      File.write("log.txt", "Ya son las 23 y no hubo actualización, gracias vuelvas prontos\n", mode: "a")
+      exit(1)
+    end
+    response = HTTParty.get(query_url).body
+    break if response != '{"error":"inexistence"}'
+    File.write("log.txt", "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin datos\n", mode: "a")
+    sleep 10
+  end
+
+  datos_fondo = JSON.parse(HTTParty.get(query_url).body)
   File.write("log.txt", "#{fondo[:nombre]} | Valor #{start}: #{datos_fondo["data"]["desde"]["valor"].to_s} | Valor #{finish}: #{datos_fondo["data"]["hasta"]["valor"].to_s} | Rendimiento: #{datos_fondo["data"]["rendimiento"].to_s}\n", mode: "a")
 
   HTTParty.get(message_endpoint+<<-HEREDOC
@@ -55,3 +51,9 @@ fondos.each do |fondo|
   HEREDOC
   )
 end
+
+
+#HTTParty.get(message_endpoint+"Actualizaron los FCI")
+#HTTParty.post(ENV["WEBHOOK_URL"],
+#              content_type: "application/json",
+#              body: {content: "La CAFCI ya tiene datos actualizados para hoy"})
