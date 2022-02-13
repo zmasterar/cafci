@@ -3,8 +3,7 @@ require 'httparty'
 require 'date'
 message_endpoint="https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_KEY']}/sendMessage?chat_id=#{ENV['CHAT_ID']}&parse_mode=markdown&text="
 fondos = [
-  {nombre: "Consultatio Retorno Absoluto - Clase A", fondo: 662, clase: 1367},
-  {nombre: "Cohen Renta Fija Dolares - Clase A", fondo: 803, clase: 2088}
+  { nombre: 'Mercado Fondo - Clase A', fondo: 798, clase: 1982 }
 ]
 File.write("log.txt", "\n#{Time.now.strftime("%d/%m/%Y - %H:%M:%S")} - EMPIEZA EJECUCIÓN\n", mode: "a")
 if ARGV.count==2
