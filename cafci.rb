@@ -26,6 +26,7 @@ else
   exit(1)
 end
 
+message = ""
 fondos.each do |fondo|
   query_url="https://api.cafci.org.ar/fondo/#{fondo[:fondo]}/clase/#{fondo[:clase]}/rendimiento/#{start}/#{finish}"
   while true do
@@ -35,24 +36,27 @@ fondos.each do |fondo|
       exit(1)
     end
     response = HTTParty.get(query_url).body
+    if response == '{"error":"wrong-dates"}'
+      File.write("log.txt", "Las fechas ingresadas son incorrectas, verifique e intente de nuevo\n", mode: "a")
+      exit(1)
+    end
+
     break if response != '{"error":"inexistence"}'
     File.write("log.txt", "#{time.strftime("%d/%m/%Y - %H:%M:%S")} - Sin datos\n", mode: "a")
-    sleep 10
+    sleep 30
   end
-
   datos_fondo = JSON.parse(HTTParty.get(query_url).body)
   File.write("log.txt", "#{fondo[:nombre]} | Valor #{start}: #{datos_fondo["data"]["desde"]["valor"].to_s} | Valor #{finish}: #{datos_fondo["data"]["hasta"]["valor"].to_s} | Rendimiento: #{datos_fondo["data"]["rendimiento"].to_s}\n", mode: "a")
 
-  HTTParty.get(message_endpoint+<<-HEREDOC
-  *#{fondo[:nombre]}*%0A
-  %0A
+  message += <<-HEREDOC
+*#{fondo[:nombre]}*%0A
   Valor *#{start}*: `#{datos_fondo["data"]["desde"]["valor"].to_s}%0A`
   Valor *#{finish}*: `#{datos_fondo["data"]["hasta"]["valor"].to_s}%0A`
   Rendimiento: `#{datos_fondo["data"]["rendimiento"].to_s}`
+  %0A%0A
   HEREDOC
-  )
 end
-
+HTTParty.get(message_endpoint + message)
 
 #HTTParty.get(message_endpoint+"Actualizaron los FCI")
 #HTTParty.post(ENV["WEBHOOK_URL"],
